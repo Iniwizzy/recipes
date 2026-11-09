@@ -161,11 +161,21 @@
     [x-cloak] {
         display: none !important;
     }
+
+    /*
+     * The page itself never scrolls sideways (wide content scrolls inside its own box).
+     * `clip` instead of `hidden` so sticky headers keep working.
+     */
+    html,
+    body {
+        overflow-x: clip;
+    }
 }
 
 @layer components {
+    /* min-w-0: a card inside a grid or flex row may shrink instead of pushing the page wider. */
     .card {
-        @apply rounded-[18px] border border-line bg-card p-5 shadow-[0_1px_2px_rgba(16,24,40,.05)] dark:shadow-none;
+        @apply min-w-0 rounded-[18px] border border-line bg-card p-5 shadow-[0_1px_2px_rgba(16,24,40,.05)] dark:shadow-none;
     }
     .card-title {
         @apply text-[17px] leading-snug font-semibold tracking-[-0.01em] text-ink;
@@ -261,7 +271,8 @@
         @apply mb-1.5 block text-[13px] font-semibold text-ink-2;
     }
     .field {
-        @apply block h-11 w-full rounded-xl border border-line bg-card px-3 text-[15px] text-ink placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/30 focus:outline-none;
+        /* 16px on phones: smaller text makes iOS zoom in on focus, and the zoomed page then slides around. */
+        @apply block h-11 w-full rounded-xl border border-line bg-card px-3 text-base text-ink placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/30 focus:outline-none sm:text-[15px];
     }
     textarea.field {
         @apply h-auto py-2.5 leading-relaxed;

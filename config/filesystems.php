@@ -40,7 +40,8 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            // Relatif ke domain yang sedang dibuka, jadi foto tampil di recipes.test maupun recipes.wizdev.tech.
+            'url' => '/storage',
             'visibility' => 'public',
             'throw' => false,
         ],

@@ -10,10 +10,10 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-panel font-sans text-[15px] text-ink antialiased lg:bg-frame">
-        <div class="mx-auto flex min-h-screen max-w-[1600px] flex-col lg:gap-4 lg:p-5">
+        <div class="mx-auto flex min-h-screen max-w-[1600px] flex-col lg:gap-4 lg:px-5 lg:pb-5">
 
-            {{-- Top bar --}}
-            <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-frame px-4 lg:static lg:h-14 lg:border-0 lg:px-0">
+            {{-- Top bar: stays at the top while the page scrolls (phone and desktop). --}}
+            <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-frame px-4 lg:h-[76px] lg:border-0 lg:px-0 lg:pt-5">
                 <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center gap-3 lg:w-[268px]" wire:navigate>
                     <x-app-logo />
                 </a>
@@ -60,7 +60,8 @@
             <div class="flex flex-1 lg:gap-4">
 
                 {{-- Sidebar (desktop) --}}
-                <nav class="hidden w-[268px] shrink-0 flex-col gap-0.5 rounded-[20px] bg-panel px-3.5 py-4 lg:flex" aria-label="Menu utama">
+                {{-- Sticks below the top bar: 76px bar + 16px gap, 20px bottom margin. --}}
+                <nav class="hidden w-[268px] shrink-0 flex-col gap-0.5 overflow-y-auto rounded-[20px] bg-panel px-3.5 py-4 lg:sticky lg:top-[92px] lg:flex lg:h-[calc(100vh-112px)] lg:self-start" aria-label="Menu utama">
                     <form action="{{ route('recipes.index') }}" method="GET" role="search">
                         <label class="mb-1.5 flex h-11 items-center gap-2 rounded-xl border border-line bg-card pr-2 pl-3 text-muted">
                             <flux:icon.magnifying-glass variant="mini" />
