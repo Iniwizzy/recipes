@@ -74,7 +74,7 @@
 
     <section class="card">
         <h2 class="card-title">Foto sampul</h2>
-        <p class="card-sub">Opsional. JPG atau PNG, maksimal 4 MB.</p>
+        <p class="card-sub">Opsional. JPG, PNG, atau WebP sampai 10 MB; otomatis dikecilkan.</p>
         <div class="mt-4 flex flex-wrap items-center gap-4">
             @if ($cover && ! $errors->has('cover'))
                 <img src="{{ $cover->temporaryUrl() }}" alt="Pratinjau sampul" class="h-28 w-40 rounded-xl object-cover">

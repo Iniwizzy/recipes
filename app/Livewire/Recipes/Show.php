@@ -3,7 +3,7 @@
 namespace App\Livewire\Recipes;
 
 use App\Models\Recipe;
-use Illuminate\Support\Facades\Storage;
+use App\Support\CoverImage;
 use Livewire\Component;
 
 class Show extends Component
@@ -26,9 +26,7 @@ class Show extends Component
     {
         $this->authorize('delete', $this->recipe);
 
-        if ($this->recipe->cover_path) {
-            Storage::disk('public')->delete($this->recipe->cover_path);
-        }
+        CoverImage::delete($this->recipe->cover_path);
         $title = $this->recipe->title;
         $this->recipe->delete();
 

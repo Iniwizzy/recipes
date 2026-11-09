@@ -5,9 +5,9 @@ namespace App\Livewire\Recipes;
 use App\Enums\Category;
 use App\Enums\Difficulty;
 use App\Models\Recipe;
+use App\Support\CoverImage;
 use App\Support\Quantity;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -145,14 +145,12 @@ class Form extends Component
             ]);
 
             if ($this->removeCover && $recipe->cover_path) {
-                Storage::disk('public')->delete($recipe->cover_path);
+                CoverImage::delete($recipe->cover_path);
                 $recipe->cover_path = null;
             }
             if ($this->cover) {
-                if ($recipe->cover_path) {
-                    Storage::disk('public')->delete($recipe->cover_path);
-                }
-                $recipe->cover_path = $this->cover->store('covers', 'public');
+                CoverImage::delete($recipe->cover_path);
+                $recipe->cover_path = CoverImage::store($this->cover);
             }
 
             $recipe->save();
@@ -199,7 +197,7 @@ class Form extends Component
             'source_url' => ['nullable', 'url', 'max:500'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_public' => ['boolean'],
-            'cover' => ['nullable', 'image', 'max:4096'],
+            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'ingredients' => ['required', 'array', 'min:1', 'max:60'],
             'ingredients.*.quantity' => ['nullable', 'string', 'max:20', function ($attribute, $value, $fail) {
                 if (trim((string) $value) !== '' && Quantity::parse($value) === null) {
@@ -227,8 +225,9 @@ class Form extends Component
             'steps.*.instruction.required' => 'Isi langkahnya atau hapus baris ini.',
             'steps.*.timer.integer' => 'Timer diisi angka menit.',
             'source_url.url' => 'Link harus diawali http:// atau https://',
-            'cover.image' => 'Sampul harus berupa gambar (JPG atau PNG).',
-            'cover.max' => 'Ukuran gambar maksimal 4 MB.',
+            'cover.image' => 'Sampul harus berupa gambar (JPG, PNG, atau WebP).',
+            'cover.mimes' => 'Sampul harus berupa gambar (JPG, PNG, atau WebP).',
+            'cover.max' => 'Ukuran gambar maksimal 10 MB.',
         ];
     }
 

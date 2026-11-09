@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Category;
 use App\Enums\Difficulty;
+use App\Support\CoverImage;
 use Database\Factories\RecipeFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -117,9 +118,16 @@ class Recipe extends Model
         return $total > 0 ? $total : null;
     }
 
-    public function coverUrl(): ?string
+    public function coverUrl(bool $thumb = false): ?string
     {
-        return $this->cover_path ? Storage::disk('public')->url($this->cover_path) : null;
+        if (! $this->cover_path) {
+            return null;
+        }
+
+        $disk = Storage::disk('public');
+        $thumbPath = CoverImage::thumbPath($this->cover_path);
+
+        return $thumb && $disk->exists($thumbPath) ? $disk->url($thumbPath) : $disk->url($this->cover_path);
     }
 
     /**

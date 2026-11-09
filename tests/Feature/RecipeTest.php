@@ -8,8 +8,11 @@ use App\Livewire\Recipes\Index;
 use App\Livewire\Recipes\Show;
 use App\Models\Recipe;
 use App\Models\User;
+use App\Support\CoverImage;
 use App\Support\Quantity;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -41,8 +44,9 @@ class RecipeTest extends TestCase
         $recipe = Recipe::factory()->withContent()->create();
         $this->actingAs(User::factory()->create());
 
-        $this->get('/resep/'.$recipe->slug)->assertForbidden();
+        $this->get('/resep/'.$recipe->slug)->assertForbidden()->assertSee('Halaman ini bukan untukmu');
         $this->get('/resep/'.$recipe->slug.'/ubah')->assertForbidden();
+        $this->get('/resep/tidak-ada')->assertNotFound()->assertSee('Halaman tidak ditemukan');
     }
 
     public function test_public_recipes_are_readable_but_not_editable_by_others(): void
@@ -84,6 +88,29 @@ class RecipeTest extends TestCase
         $this->assertNull($recipe->ingredients[2]->quantity);
         $this->assertCount(1, $recipe->steps);
         $this->assertSame(120, $recipe->steps[0]->timer_seconds);
+    }
+
+    public function test_cover_photos_are_shrunk_to_webp_with_a_thumbnail(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $recipe = Recipe::factory()->withContent()->for($user)->create();
+        $this->actingAs($user);
+
+        Livewire::test(Form::class, ['recipe' => $recipe])
+            ->set('cover', UploadedFile::fake()->image('foto-hp.jpg', 4000, 3000))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $path = $recipe->fresh()->cover_path;
+        $this->assertStringEndsWith('.webp', $path);
+        [$width, $height] = getimagesizefromstring(Storage::disk('public')->get($path));
+        $this->assertSame([1600, 1200], [$width, $height]);
+        [$thumbWidth, $thumbHeight] = getimagesizefromstring(Storage::disk('public')->get(CoverImage::thumbPath($path)));
+        $this->assertSame([640, 440], [$thumbWidth, $thumbHeight]);
+
+        Livewire::test(Show::class, ['recipe' => $recipe->fresh()])->call('delete');
+        Storage::disk('public')->assertMissing([$path, CoverImage::thumbPath($path)]);
     }
 
     public function test_validation_blocks_missing_title_and_unreadable_amounts(): void

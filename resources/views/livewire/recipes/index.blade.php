@@ -47,7 +47,7 @@
             @foreach ($recipes as $recipe)
                 <a href="{{ route('recipes.show', $recipe) }}" wire:navigate wire:key="recipe-{{ $recipe->id }}"
                     class="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-[0_1px_2px_rgba(16,24,40,.05)] transition hover:border-brand dark:shadow-none">
-                    <x-recipe-cover :recipe="$recipe" class="h-[108px] lg:h-36">
+                    <x-recipe-cover :recipe="$recipe" thumb class="h-[108px] lg:h-36">
                         @if ($recipe->is_favorite)
                             <span class="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-card text-brand">
                                 <flux:icon.heart variant="micro" class="fill-current" />

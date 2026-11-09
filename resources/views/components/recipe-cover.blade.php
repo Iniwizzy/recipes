@@ -1,6 +1,6 @@
-@props(['recipe', 'icon' => 'size-9'])
+@props(['recipe', 'icon' => 'size-9', 'thumb' => false])
 
-@if ($url = $recipe->coverUrl())
+@if ($url = $recipe->coverUrl($thumb))
     <span {{ $attributes->class('relative block overflow-hidden') }}>
         <img src="{{ $url }}" alt="" class="size-full object-cover" loading="lazy">
         {{ $slot }}
