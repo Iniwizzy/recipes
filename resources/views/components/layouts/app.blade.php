@@ -75,6 +75,7 @@
                     <x-nav-item :href="route('dashboard')" icon="squares-2x2" :current="request()->routeIs('dashboard')">Beranda</x-nav-item>
                     <x-nav-item :href="route('recipes.index')" icon="book-open" :current="request()->routeIs('recipes.index', 'recipes.show', 'recipes.edit') && ! $onFavorites" :count="$recipeCount">Resep saya</x-nav-item>
                     <x-nav-item :href="route('recipes.index', ['favorit' => 1])" icon="heart" :current="$onFavorites" :count="$favoriteCount ?: null">Favorit</x-nav-item>
+                    <x-nav-item :href="route('meal-plan.index')" icon="calendar-days" :current="request()->routeIs('meal-plan.*')">Rencana menu</x-nav-item>
                     <x-nav-item :href="route('shopping.index')" icon="shopping-bag" :current="request()->routeIs('shopping.*')" :count="$shoppingCount ?: null">Daftar belanja</x-nav-item>
 
                     <p class="mx-3 mt-3.5 mb-1 text-xs font-medium text-muted">Tambah resep</p>
@@ -106,9 +107,9 @@
                 class="flex size-[52px] items-center justify-center justify-self-center rounded-2xl bg-brand text-on-brand shadow-[0_6px_16px_rgba(16,24,40,.2)]">
                 <flux:icon.plus class="size-6" />
             </a>
-            {{-- Favorites stay one tap away as a filter chip on the recipe list. --}}
+            {{-- Favorites are a filter chip on the recipe list; the account lives in the avatar menu up top. --}}
+            <x-bottom-nav-item :href="route('meal-plan.index')" icon="calendar-days" :current="request()->routeIs('meal-plan.*')">Rencana</x-bottom-nav-item>
             <x-bottom-nav-item :href="route('shopping.index')" icon="shopping-bag" :current="request()->routeIs('shopping.*')" :badge="$shoppingCount ?: null">Belanja</x-bottom-nav-item>
-            <x-bottom-nav-item :href="route('settings.profile')" icon="user-circle" :current="request()->routeIs('settings.*')">Akun</x-bottom-nav-item>
         </nav>
 
         @fluxScripts

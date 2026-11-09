@@ -6,8 +6,9 @@ Aplikasi web untuk menyimpan resep dan tutorial masak. Dibangun dengan Laravel 1
 
 - **Akun**: daftar, masuk, lupa kata sandi, dan pengaturan profil.
 - **Beranda (dashboard)**:
+  - menu hari ini dari rencana, dengan tombol langsung masak
   - kartu ringkasan
-  - grafik waktu masak 7 hari per kategori, dengan tampilan tabel
+  - grafik waktu masak minggu ini per kategori, plus menu yang direncanakan (abu-abu), dengan tampilan tabel
   - resep yang lama tidak dimasak
   - resep paling sering dimasak
   - koleksi per kategori
@@ -23,6 +24,10 @@ Aplikasi web untuk menyimpan resep dan tutorial masak. Dibangun dengan Laravel 1
   - bahan yang sama digabung otomatis (2 siung + 3 siung bawang merah jadi 5 siung)
   - tambah barang dengan mengetik bebas, mis. `2 butir telur` atau `1kg beras`
   - centang saat belanja, lalu salin daftarnya atau kirim ke WhatsApp
+- **Rencana menu**:
+  - satu minggu (Senin–Minggu) × sarapan, makan siang, makan malam, camilan
+  - pilih resep lewat pencarian, atur porsi per menu
+  - satu tombol memasukkan bahan semua menu dari hari ini sampai akhir minggu ke daftar belanja
 - **Tulis/ubah resep**:
   - bahan dengan jumlah bebas tulis (`2`, `1,5`, `1/2`, `1 1/2`)
   - langkah yang bisa diurutkan ulang, masing-masing dengan timer opsional
@@ -87,7 +92,6 @@ Tes memakai database MySQL `recipes_test` (lihat `phpunit.xml`).
 
 ## Rencana berikutnya
 
-- Rencana menu mingguan
 - Koleksi resep
 - Import resep dari teks atau link (TikTok, YouTube, blog)
 - PWA dan offline untuk Mode Masak

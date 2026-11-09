@@ -13,14 +13,43 @@
             </p>
         </div>
         <div class="flex items-center gap-2.5">
-            <a href="{{ route('recipes.index') }}" class="btn" wire:navigate>
-                <flux:icon.book-open variant="mini" /> Semua resep
+            <a href="{{ route('meal-plan.index') }}" class="btn" wire:navigate>
+                <flux:icon.calendar-days variant="mini" /> Rencana menu
             </a>
             <a href="{{ route('recipes.create') }}" class="btn btn-primary" wire:navigate>
                 <flux:icon.plus variant="mini" /> Tulis resep
             </a>
         </div>
     </div>
+
+    {{-- Today's menu from the meal plan --}}
+    @if ($todayPlans->isNotEmpty())
+        <section class="card !p-4 sm:!px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="card-title">Menu hari ini</h2>
+                <a href="{{ route('meal-plan.index') }}" class="text-sm font-semibold text-brand hover:underline" wire:navigate>Lihat rencana minggu ini</a>
+            </div>
+            <ul class="mt-3 grid gap-2.5 md:grid-cols-2 2xl:grid-cols-3">
+                @foreach ($todayPlans as $plan)
+                    @php $done = in_array($plan->recipe_id, $cookedToday, true); @endphp
+                    <li class="flex min-w-0 items-center gap-3 rounded-xl border border-line-soft p-2.5">
+                        <x-recipe-cover :recipe="$plan->recipe" thumb icon="size-5" class="size-11 shrink-0 rounded-xl" />
+                        <a href="{{ route('recipes.show', $plan->recipe) }}" class="flex min-w-0 flex-1 flex-col" wire:navigate>
+                            <span class="text-xs text-muted">{{ $plan->slot->label() }}, {{ $plan->servings }} porsi</span>
+                            <span class="line-clamp-2 leading-snug font-semibold hover:text-brand">{{ $plan->recipe->title }}</span>
+                        </a>
+                        @if ($done)
+                            <span class="status st-ok">Sudah</span>
+                        @else
+                            <a href="{{ route('recipes.cook', $plan->recipe) }}" class="btn btn-primary btn-sm !h-9 shrink-0" aria-label="Mulai masak {{ $plan->recipe->title }}">
+                                <flux:icon.play variant="micro" /> Masak
+                            </a>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
     {{-- KPI cards --}}
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -60,8 +89,8 @@
         <section class="card" x-data="{ sel: null, table: false }">
             <div class="flex items-start justify-between gap-3">
                 <div>
-                    <h2 class="card-title">Waktu masak 7 hari terakhir</h2>
-                    <p class="card-sub">Menit di dapur per hari, dipisah per kategori. Arahkan kursor atau ketuk batang untuk detail.</p>
+                    <h2 class="card-title">Waktu masak minggu ini</h2>
+                    <p class="card-sub">Menit di dapur per hari, dipisah per kategori. Abu-abu adalah menu yang direncanakan. Arahkan kursor atau ketuk batang untuk detail.</p>
                 </div>
                 <button type="button" class="ibtn !size-10 !rounded-[10px]" x-on:click="table = !table" x-bind:aria-pressed="table" aria-label="Tampilkan sebagai tabel">
                     <flux:icon.table-cells variant="mini" />
@@ -72,11 +101,15 @@
                 @foreach (\App\Enums\Category::cases() as $category)
                     <span class="inline-flex items-center gap-[7px]"><i class="size-2.5 rounded-[3px] {{ $category->swatch() }}"></i>{{ $category->label() }}</span>
                 @endforeach
+                <span class="inline-flex items-center gap-[7px]"><i class="size-2.5 rounded-[3px] bg-plan"></i>Direncanakan</span>
             </div>
 
             <div x-show="!table">
                 @if ($chart['empty'])
-                    <p class="mt-5 rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">Belum ada catatan masak 7 hari terakhir. Selesaikan Mode Masak dan waktunya tercatat di sini.</p>
+                    <p class="mt-5 rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">
+                        Belum ada yang dimasak atau direncanakan minggu ini.
+                        <a href="{{ route('meal-plan.index') }}" class="font-semibold text-brand" wire:navigate>Buat rencana menu</a>
+                    </p>
                 @else
                     <div class="relative" x-on:mouseleave="sel = null">
                     <div class="relative mt-[18px] h-[236px]">
@@ -92,7 +125,7 @@
                                     class="relative mx-0.5 flex h-full flex-col items-center justify-end rounded-[10px] sm:mx-1"
                                     x-bind:class="sel === {{ $i }} && 'bg-brand-tint'"
                                     x-on:mouseenter="sel = {{ $i }}" x-on:focus="sel = {{ $i }}" x-on:click="sel = {{ $i }}"
-                                    aria-label="{{ $day['full'] }}: {{ $day['total'] }} menit">
+                                    aria-label="{{ $day['full'] }}: {{ $day['total'] }} menit dimasak{{ $day['planned'] ? ', '.$day['planned'].' menit direncanakan' : '' }}">
                                     @if ($day['today'])
                                         <span class="absolute top-1.5 left-1/2 flex h-6 -translate-x-1/2 items-center rounded-md bg-ink px-2 text-xs font-semibold whitespace-nowrap text-card">Hari ini</span>
                                     @endif
@@ -115,15 +148,23 @@
                                         ? '--tip-left: calc(42px + (100% - 36px) * '.round(($i + 1) / 7, 4).')'
                                         : '--tip-right: calc(6px + (100% - 36px) * '.round((7 - $i) / 7, 4).')' }}">
                                     <p class="mb-1.5 text-[13px] font-semibold">{{ $day['full'] }}{{ $day['total'] ? ', '.$day['total'].' menit' : '' }}</p>
-                                    @forelse ($day['logs'] as $log)
+                                    @foreach ($day['logs'] as $log)
                                         <div class="flex items-start gap-2 py-1 text-xs">
                                             <i class="mt-[3px] size-2.5 shrink-0 rounded-[3px] {{ $log['swatch'] }}"></i>
                                             <span class="flex min-w-0 flex-1 flex-col text-ink-2">{{ $log['category'] }}<small class="text-xs text-muted">{{ $log['title'] }}</small></span>
                                             <b class="font-semibold whitespace-nowrap tabular-nums">{{ $log['minutes'] }} mnt</b>
                                         </div>
-                                    @empty
-                                        <p class="text-xs text-muted">Belum ada yang dimasak.</p>
-                                    @endforelse
+                                    @endforeach
+                                    @foreach ($day['plans'] as $plan)
+                                        <div class="flex items-start gap-2 py-1 text-xs">
+                                            <i class="mt-[3px] size-2.5 shrink-0 rounded-[3px] bg-plan"></i>
+                                            <span class="flex min-w-0 flex-1 flex-col text-ink-2">Direncanakan, {{ strtolower($plan['slot']) }}<small class="text-xs text-muted">{{ $plan['title'] }}</small></span>
+                                            <b class="font-semibold whitespace-nowrap tabular-nums">± {{ $plan['minutes'] }} mnt</b>
+                                        </div>
+                                    @endforeach
+                                    @if (! $day['logs'] && ! $day['plans'])
+                                        <p class="text-xs text-muted">Belum ada yang dimasak atau direncanakan.</p>
+                                    @endif
                                 </div>
                             @endforeach
                     </div>
@@ -131,21 +172,23 @@
             </div>
 
             <div x-cloak x-show="table" class="mt-4 overflow-x-auto rounded-xl border border-line-soft text-[13px]" role="table" aria-label="Menit memasak per hari">
-                <div class="grid min-w-[520px] grid-cols-[1.6fr_repeat(6,minmax(0,1fr))] bg-panel font-semibold text-ink-2" role="row">
+                <div class="grid min-w-[600px] grid-cols-[1.6fr_repeat(7,minmax(0,1fr))] bg-panel font-semibold text-ink-2" role="row">
                     <span class="px-2.5 py-2" role="columnheader">Hari</span>
                     @foreach (\App\Enums\Category::cases() as $category)
                         <span class="px-2.5 py-2 text-right" role="columnheader">{{ $category->label() }}</span>
                     @endforeach
                     <span class="px-2.5 py-2 text-right" role="columnheader">Total</span>
+                    <span class="px-2.5 py-2 text-right" role="columnheader">Rencana</span>
                 </div>
                 @foreach ($chart['days'] as $day)
-                    <div class="grid min-w-[520px] grid-cols-[1.6fr_repeat(6,minmax(0,1fr))] border-t border-line-soft tabular-nums" role="row">
+                    <div class="grid min-w-[600px] grid-cols-[1.6fr_repeat(7,minmax(0,1fr))] border-t border-line-soft tabular-nums" role="row">
                         <span class="px-2.5 py-2" role="cell">{{ $day['full'] }}</span>
                         @foreach (\App\Enums\Category::cases() as $category)
                             @php $part = collect($day['parts'])->firstWhere('category', $category); @endphp
                             <span class="px-2.5 py-2 text-right" role="cell">{{ $part['minutes'] ?? '–' }}</span>
                         @endforeach
                         <span class="px-2.5 py-2 text-right font-semibold" role="cell">{{ $day['total'] ?: '–' }}</span>
+                        <span class="px-2.5 py-2 text-right text-muted" role="cell">{{ $day['planned'] ? '± '.$day['planned'] : '–' }}</span>
                     </div>
                 @endforeach
             </div>

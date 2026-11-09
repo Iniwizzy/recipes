@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Dashboard;
+use App\Livewire\MealPlanner;
 use App\Livewire\Recipes;
 use App\Livewire\ShoppingList;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('resep/{recipe}', Recipes\Show::class)->name('recipes.show');
 
     Route::get('belanja', ShoppingList::class)->name('shopping.index');
+    Route::get('rencana', MealPlanner::class)->name('meal-plan.index');
 });
 
 Route::middleware(['auth'])->group(function () {

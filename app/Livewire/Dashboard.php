@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Enums\Category;
+use App\Enums\MealSlot;
 use App\Models\CookLog;
+use App\Models\MealPlan;
 use App\Models\Recipe;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -29,11 +31,22 @@ class Dashboard extends Component
         $week = $logs->where('cooked_at', '>=', $today->copy()->subDays(6));
         $prevWeek = $logs->whereBetween('cooked_at', [$today->copy()->subDays(13), $today->copy()->subDays(7)->endOfDay()]);
 
+        $plans = $user->mealPlans()->with('recipe')
+            ->whereBetween('date', [$today->copy()->startOfWeek(Carbon::MONDAY)->toDateString(), $today->copy()->endOfWeek(Carbon::SUNDAY)->toDateString()])
+            ->orderBy('id')
+            ->get();
+        $slotOrder = array_map(fn (MealSlot $s) => $s->value, MealSlot::cases());
+        $todayPlans = $plans->filter(fn (MealPlan $p) => $p->date->isSameDay($today) && $p->recipe)
+            ->sortBy(fn (MealPlan $p) => array_search($p->slot->value, $slotOrder, true))
+            ->values();
+
         return view('livewire.dashboard', [
             'greeting' => $this->greeting($now),
             'firstName' => strtok($user->name, ' '),
             'kpis' => $this->kpis($recipes, $logs, $week, $prevWeek, $today),
-            'chart' => $this->weekChart($week, $today),
+            'chart' => $this->weekChart($logs, $plans, $today),
+            'todayPlans' => $todayPlans,
+            'cookedToday' => $logs->filter(fn (CookLog $l) => $l->cooked_at->isSameDay($today))->pluck('recipe_id')->all(),
             'stale' => $this->staleRecipes($recipes, $today),
             'top' => $this->topRecipes($logs),
             'donut' => $this->donut($recipes),
@@ -181,17 +194,20 @@ class Dashboard extends Component
     }
 
     /**
-     * Stacked minutes per category for the last 7 days (today last).
+     * This week (Monday to Sunday): minutes actually cooked, stacked per category,
+     * plus a gray "planned" segment for menus from the meal plan that are still
+     * ahead (today included, minus recipes already cooked today).
      *
      * @return array<string, mixed>
      */
-    private function weekChart(Collection $week, Carbon $today): array
+    private function weekChart(Collection $logs, Collection $plans, Carbon $today): array
     {
+        $start = $today->copy()->startOfWeek(Carbon::MONDAY);
         $days = [];
         $maxTotal = 0;
-        for ($d = 6; $d >= 0; $d--) {
-            $date = $today->copy()->subDays($d);
-            $dayLogs = $week->filter(fn (CookLog $l) => $l->cooked_at->isSameDay($date))->values();
+        for ($i = 0; $i < 7; $i++) {
+            $date = $start->copy()->addDays($i);
+            $dayLogs = $logs->filter(fn (CookLog $l) => $l->cooked_at->isSameDay($date))->values();
 
             $byCategory = [];
             foreach (Category::cases() as $category) {
@@ -201,20 +217,34 @@ class Dashboard extends Component
                 }
             }
 
+            $cookedIds = $dayLogs->pluck('recipe_id')->all();
+            $dayPlans = $date->gte($today)
+                ? $plans->filter(fn (MealPlan $p) => $p->date->isSameDay($date) && ! in_array($p->recipe_id, $cookedIds, true))->values()
+                : collect();
+            // Recipes without times count as 30 minutes so the plan still shows up.
+            $planMinutes = fn (MealPlan $p) => $p->recipe?->totalMinutes() ?? 30;
+
             $total = array_sum(array_column($byCategory, 'minutes'));
-            $maxTotal = max($maxTotal, $total);
+            $planned = (int) $dayPlans->sum($planMinutes);
+            $maxTotal = max($maxTotal, $total + $planned);
 
             $days[] = [
                 'short' => $date->translatedFormat('D j'),
                 'full' => $date->translatedFormat('l, j M'),
-                'today' => $d === 0,
+                'today' => $date->isSameDay($today),
                 'total' => $total,
+                'planned' => $planned,
                 'parts' => $byCategory,
                 'logs' => $dayLogs->map(fn (CookLog $l) => [
                     'title' => $l->recipe?->title ?? 'Resep dihapus',
                     'swatch' => $l->recipe?->category->swatch() ?? 'bg-s1',
                     'category' => $l->recipe?->category->label() ?? '',
                     'minutes' => (int) $l->minutes,
+                ])->all(),
+                'plans' => $dayPlans->map(fn (MealPlan $p) => [
+                    'title' => $p->recipe?->title ?? '',
+                    'slot' => $p->slot->label(),
+                    'minutes' => $planMinutes($p),
                 ])->all(),
             ];
         }
@@ -226,6 +256,10 @@ class Dashboard extends Component
             foreach ($day['parts'] as $i => $part) {
                 $h = (int) round($part['minutes'] / $top * $plot) - ($i > 0 ? 2 : 0);
                 $segments[] = ['swatch' => $part['category']->swatch(), 'height' => max($h, 2)];
+            }
+            if ($day['planned'] > 0) {
+                $h = (int) round($day['planned'] / $top * $plot) - ($segments ? 2 : 0);
+                $segments[] = ['swatch' => 'bg-plan', 'height' => max($h, 2)];
             }
             $day['segments'] = $segments;
         }
