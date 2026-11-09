@@ -1,6 +1,4 @@
-<div class="flex aspect-square size-8 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
-    <x-app-logo-icon class="size-5 fill-current text-white dark:text-black" />
-</div>
-<div class="ml-1 grid flex-1 text-left text-sm">
-    <span class="mb-0.5 truncate leading-none font-semibold">Laravel Starter Kit</span>
-</div>
+<span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-on-brand">
+    <x-app-logo-icon class="size-[22px]" />
+</span>
+<span class="truncate text-xl font-bold tracking-[-0.01em] text-ink">{{ config('app.name') }}</span>
