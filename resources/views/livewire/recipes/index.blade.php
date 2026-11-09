@@ -1,12 +1,20 @@
 <div class="flex flex-col gap-4">
     <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-semibold tracking-[-0.02em] lg:text-[28px]">{{ $favorites ? 'Resep favorit' : 'Resep saya' }}</h1>
+            <h1 class="text-2xl font-semibold tracking-[-0.02em] lg:text-[28px]">{{ $saved ? 'Resep disimpan' : ($favorites ? 'Resep favorit' : 'Resep saya') }}</h1>
             <p class="mt-1.5 text-[15px] text-ink-2">{{ $recipes->total() }} resep{{ $search !== '' ? ' cocok dengan "'.$search.'"' : '' }}</p>
         </div>
-        <a href="{{ route('recipes.create') }}" class="btn btn-primary" wire:navigate>
-            <flux:icon.plus variant="mini" /> Tulis resep
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('explore') }}" class="btn" wire:navigate><flux:icon.globe-alt variant="mini" /> Jelajahi</a>
+            <a href="{{ route('recipes.create') }}" class="btn btn-primary" wire:navigate>
+                <flux:icon.plus variant="mini" /> Tulis resep
+            </a>
+        </div>
+    </div>
+
+    <div class="seg max-w-sm" role="group" aria-label="Sumber resep">
+        <button type="button" wire:click="showSaved(false)" aria-pressed="{{ $saved ? 'false' : 'true' }}">Resepku</button>
+        <button type="button" wire:click="showSaved(true)" aria-pressed="{{ $saved ? 'true' : 'false' }}">Disimpan{{ $savedCount ? ' ('.$savedCount.')' : '' }}</button>
     </div>
 
     <label class="flex h-[50px] items-center gap-2.5 rounded-[14px] border border-line bg-card px-3.5 text-muted lg:hidden">
@@ -25,9 +33,11 @@
         @foreach ($categories as $category)
             <button type="button" class="pick" wire:click="pickCategory('{{ $category->value }}')" aria-pressed="{{ $active === $category ? 'true' : 'false' }}">{{ $category->label() }}</button>
         @endforeach
-        <button type="button" class="pick" wire:click="$toggle('favorites')" aria-pressed="{{ $favorites ? 'true' : 'false' }}">
-            <flux:icon.heart variant="micro" class="mr-1.5" /> Favorit
-        </button>
+        @unless ($saved)
+            <button type="button" class="pick" wire:click="$toggle('favorites')" aria-pressed="{{ $favorites ? 'true' : 'false' }}">
+                <flux:icon.heart variant="micro" class="mr-1.5" /> Favorit
+            </button>
+        @endunless
         <a href="{{ route('collections.index') }}" class="pick" wire:navigate>
             <flux:icon.rectangle-stack variant="micro" class="mr-1.5" /> Koleksi
         </a>
@@ -39,16 +49,22 @@
             <p class="mt-1 text-sm text-muted">
                 @if ($search !== '' || $active || $favorites)
                     Coba kata kunci lain atau pilih kategori "Semua".
+                @elseif ($saved)
+                    Buka Jelajahi, lalu tekan Simpan pada resep yang kamu suka.
                 @else
                     Mulai dengan menulis resep andalanmu.
                 @endif
             </p>
-            <a href="{{ route('recipes.create') }}" class="btn btn-primary mt-4" wire:navigate><flux:icon.plus variant="mini" /> Tulis resep</a>
+            @if ($saved)
+                <a href="{{ route('explore') }}" class="btn btn-primary mt-4" wire:navigate><flux:icon.globe-alt variant="mini" /> Jelajahi resep</a>
+            @else
+                <a href="{{ route('recipes.create') }}" class="btn btn-primary mt-4" wire:navigate><flux:icon.plus variant="mini" /> Tulis resep</a>
+            @endif
         </div>
     @else
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4 xl:grid-cols-4">
             @foreach ($recipes as $recipe)
-                <x-recipe-card :recipe="$recipe" wire:key="recipe-{{ $recipe->id }}" />
+                <x-recipe-card :recipe="$recipe" :byline="$saved" wire:key="recipe-{{ $recipe->id }}" />
             @endforeach
         </div>
 

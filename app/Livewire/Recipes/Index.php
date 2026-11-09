@@ -22,6 +22,10 @@ class Index extends Component
     #[Url(as: 'favorit', except: false)]
     public bool $favorites = false;
 
+    /** Show recipes bookmarked from the public catalog instead of the cook's own. */
+    #[Url(as: 'disimpan', except: false)]
+    public bool $saved = false;
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -33,21 +37,32 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function showSaved(bool $saved): void
+    {
+        $this->saved = $saved;
+        $this->favorites = false;
+        $this->resetPage();
+    }
+
     public function render()
     {
         $category = Category::tryFrom($this->category);
+        $user = auth()->user();
 
-        $recipes = auth()->user()->recipes()
+        $query = $this->saved
+            ? $user->savedRecipes()->published()->with('user:id,name,username')->withCount('savers')->orderByPivot('created_at', 'desc')
+            : $user->recipes()->when($this->favorites, fn ($q) => $q->where('is_favorite', true))->latest();
+
+        $recipes = $query
             ->search($this->search)
             ->when($category, fn ($q) => $q->where('category', $category))
-            ->when($this->favorites, fn ($q) => $q->where('is_favorite', true))
-            ->latest()
             ->paginate(12);
 
         return view('livewire.recipes.index', [
             'recipes' => $recipes,
             'categories' => Category::cases(),
             'active' => $category,
+            'savedCount' => $user->savedRecipes()->published()->count(),
         ]);
     }
 }

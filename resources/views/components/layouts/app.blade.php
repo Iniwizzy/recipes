@@ -5,6 +5,9 @@
     $shoppingCount = $user->shoppingListItems()->whereNull('checked_at')->count();
     $collectionCount = $user->recipeCollections()->count();
     $onFavorites = request()->routeIs('recipes.index') && request()->boolean('favorit');
+    $openReports = $user->is_admin
+        ? \App\Models\RecipeReport::whereNull('resolved_at')->distinct()->count('recipe_id')
+        : 0;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -74,6 +77,7 @@
 
                     <p class="mx-3 mt-3.5 mb-1 text-xs font-medium text-muted">Dapur</p>
                     <x-nav-item :href="route('dashboard')" icon="squares-2x2" :current="request()->routeIs('dashboard')">Beranda</x-nav-item>
+                    <x-nav-item :href="route('explore')" icon="globe-alt" :current="request()->routeIs('explore', 'profile')">Jelajahi</x-nav-item>
                     <x-nav-item :href="route('recipes.index')" icon="book-open" :current="request()->routeIs('recipes.index', 'recipes.show', 'recipes.edit') && ! $onFavorites" :count="$recipeCount">Resep saya</x-nav-item>
                     <x-nav-item :href="route('recipes.index', ['favorit' => 1])" icon="heart" :current="$onFavorites" :count="$favoriteCount ?: null">Favorit</x-nav-item>
                     <x-nav-item :href="route('collections.index')" icon="rectangle-stack" :current="request()->routeIs('collections.*')" :count="$collectionCount ?: null">Koleksi</x-nav-item>
@@ -84,6 +88,9 @@
                     <x-nav-item :href="route('recipes.create')" icon="pencil-square" :current="request()->routeIs('recipes.create')">Tulis resep</x-nav-item>
 
                     <div class="mt-auto flex flex-col gap-0.5 pt-3">
+                        @if ($user->is_admin)
+                            <x-nav-item :href="route('admin.reports')" icon="flag" :current="request()->routeIs('admin.*')" :count="$openReports ?: null">Laporan</x-nav-item>
+                        @endif
                         <x-nav-item :href="route('settings.profile')" icon="cog-6-tooth" :current="request()->routeIs('settings.*')">Pengaturan</x-nav-item>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

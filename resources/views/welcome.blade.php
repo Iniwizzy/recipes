@@ -21,6 +21,7 @@
                     <p class="mt-4 text-lg text-ink-2">Simpan resep lengkap dengan bahan dan langkahnya, ubah porsi sekali tekan, lalu masak dengan Mode Masak: satu langkah per layar, timer jalan sendiri, layar tidak mati.</p>
                     <div class="mt-7 flex flex-wrap gap-3">
                         <a href="{{ route('register') }}" class="btn btn-primary !h-12 !px-6">Mulai gratis</a>
+                        <a href="{{ route('explore') }}" class="btn !h-12 !px-6"><flux:icon.globe-alt variant="mini" /> Jelajahi resep</a>
                         <a href="{{ route('login') }}" class="btn !h-12 !px-6">Sudah punya akun</a>
                     </div>
                 </div>

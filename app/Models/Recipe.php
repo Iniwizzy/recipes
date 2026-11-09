@@ -47,6 +47,8 @@ class Recipe extends Model
             'is_public' => 'boolean',
             'cooked_count' => 'integer',
             'last_cooked_at' => 'datetime',
+            'published_at' => 'datetime',
+            'hidden_at' => 'datetime',
         ];
     }
 
@@ -56,7 +58,38 @@ class Recipe extends Model
             if (! $recipe->slug || $recipe->isDirty('title')) {
                 $recipe->slug = static::uniqueSlug($recipe->title, $recipe->id);
             }
+            if ($recipe->is_public && ! $recipe->published_at) {
+                $recipe->published_at = now();
+            }
         });
+    }
+
+    /**
+     * Recipes anyone may see in the catalog: shared by their owner and not taken down.
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('recipes.is_public', true)->whereNull('recipes.hidden_at');
+    }
+
+    public function isListed(): bool
+    {
+        return $this->is_public && $this->hidden_at === null;
+    }
+
+    public function savers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'recipe_saves')->withTimestamps();
+    }
+
+    public function forkedFrom(): BelongsTo
+    {
+        return $this->belongsTo(Recipe::class, 'forked_from_id');
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(RecipeReport::class);
     }
 
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string

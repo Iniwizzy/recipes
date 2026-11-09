@@ -171,8 +171,14 @@ class MealPlanner extends Component
         [$from] = $this->upcomingRange();
         $upcoming = $plans->filter(fn (MealPlan $p) => $p->date->gte($from))->count();
 
+        // The cook's own recipes plus the ones they saved from the public catalog.
+        $userId = auth()->id();
         $recipes = $this->pickerOpen
-            ? auth()->user()->recipes()->search($this->search)
+            ? Recipe::query()
+                ->where(fn ($q) => $q->where('recipes.user_id', $userId)
+                    ->orWhere(fn ($saved) => $saved->published()->whereHas('savers', fn ($s) => $s->whereKey($userId))))
+                ->search($this->search)
+                ->orderByRaw('recipes.user_id = ? desc', [$userId])
                 ->orderByDesc('is_favorite')->orderBy('title')->limit(30)->get()
             : collect();
 

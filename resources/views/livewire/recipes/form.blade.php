@@ -182,8 +182,9 @@
             <label class="flex cursor-pointer items-start gap-3">
                 <input type="checkbox" class="mt-0.5 size-5 shrink-0 accent-brand" wire:model="is_public">
                 <span>
-                    <b class="block font-semibold">Bagikan ke publik</b>
-                    <span class="text-[13px] text-muted">Pengguna Buku Resep lain yang sudah login bisa membuka resep ini lewat link-nya. Bisa diubah kapan saja.</span>
+                    <b class="block font-semibold">Terbitkan di Jelajahi</b>
+                    <span class="block text-[13px] text-muted">Siapa saja bisa menemukan, menyimpan, dan menyalin resep ini. Catatan pribadimu tetap tidak terlihat. Bisa dibatalkan kapan saja.</span>
+                    <span class="mt-1 block text-[13px] text-warn-fg">Terbitkan hanya resep tulisanmu sendiri, atau yang sudah diizinkan penulisnya. Resep salinan dari sosmed atau blog orang lain sebaiknya tetap pribadi.</span>
                 </span>
             </label>
         </div>

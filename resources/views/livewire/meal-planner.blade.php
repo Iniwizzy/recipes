@@ -123,10 +123,10 @@
                                 <span class="flex min-w-0 flex-1 flex-col">
                                     <span class="truncate font-semibold">{{ $recipe->title }}</span>
                                     <span class="truncate text-xs text-muted">
-                                        {{ $recipe->category->label() }}{{ $recipe->totalMinutes() ? ', '.$recipe->totalMinutes().' mnt' : '' }}
+                                        {{ $recipe->category->label() }}{{ $recipe->totalMinutes() ? ', '.$recipe->totalMinutes().' mnt' : '' }}{{ $recipe->user_id !== auth()->id() ? ', disimpan dari Jelajahi' : '' }}
                                     </span>
                                 </span>
-                                @if ($recipe->is_favorite)
+                                @if ($recipe->user_id === auth()->id() && $recipe->is_favorite)
                                     <flux:icon.heart variant="micro" class="fill-current text-brand" />
                                 @endif
                             </button>

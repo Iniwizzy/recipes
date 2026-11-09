@@ -6,11 +6,23 @@
         </div>
     @endif
 
+    @if ($recipe->hidden_at && ($isOwner || auth()->user()?->is_admin))
+        <div class="rounded-2xl border border-crit-fg/30 bg-crit-bg px-4 py-3 text-sm text-crit-fg" role="status">
+            <b class="font-semibold">Resep ini disembunyikan dari Jelajahi</b> oleh moderator setelah ada laporan. Pemiliknya tetap bisa membuka dan memasaknya.
+        </div>
+    @endif
+
     <div class="flex flex-wrap items-center justify-between gap-3">
         <nav class="flex min-h-11 items-center gap-1.5 text-sm text-muted" aria-label="Lokasi">
-            <a href="{{ route('recipes.index') }}" class="hover:text-ink" wire:navigate>Resep saya</a>
-            <flux:icon.chevron-right variant="micro" />
-            <a href="{{ route('recipes.index', ['kategori' => $recipe->category->value]) }}" class="hover:text-ink" wire:navigate>{{ $recipe->category->label() }}</a>
+            @if ($isOwner)
+                <a href="{{ route('recipes.index') }}" class="hover:text-ink" wire:navigate>Resep saya</a>
+                <flux:icon.chevron-right variant="micro" />
+                <a href="{{ route('recipes.index', ['kategori' => $recipe->category->value]) }}" class="hover:text-ink" wire:navigate>{{ $recipe->category->label() }}</a>
+            @else
+                <a href="{{ route('explore') }}" class="hover:text-ink" wire:navigate>Jelajahi</a>
+                <flux:icon.chevron-right variant="micro" />
+                <a href="{{ route('explore', ['kategori' => $recipe->category->value]) }}" class="hover:text-ink" wire:navigate>{{ $recipe->category->label() }}</a>
+            @endif
             <flux:icon.chevron-right variant="micro" class="hidden sm:block" />
             <span class="hidden font-semibold text-ink sm:inline" aria-current="page">{{ $recipe->title }}</span>
         </nav>
@@ -27,6 +39,22 @@
                 </flux:modal.trigger>
             @endif
 
+            @if ($canSave)
+                <button type="button" class="btn" wire:click="toggleSave" aria-pressed="{{ $isSaved ? 'true' : 'false' }}"
+                    @class(['!border-transparent !bg-brand-tint !text-brand' => $isSaved])>
+                    <flux:icon.bookmark variant="mini" @class(['fill-current' => $isSaved]) />
+                    {{ $isSaved ? 'Disimpan' : 'Simpan' }}
+                </button>
+                <button type="button" class="btn" wire:click="fork" wire:loading.attr="disabled" wire:target="fork">
+                    <flux:icon.document-duplicate variant="mini" /> Salin &amp; ubah
+                </button>
+            @endif
+
+            @guest
+                <a href="{{ route('login') }}" class="btn"><flux:icon.bookmark variant="mini" /> Masuk untuk menyimpan</a>
+            @endguest
+
+            @auth
             {{-- Save to collections: a panel under the button on desktop, a sheet near the top on phones. --}}
             <div class="relative" x-data="{ open: false }" x-on:click.outside="open = false" x-on:keydown.escape.window="open = false">
                 <button type="button" class="btn" x-on:click="open = !open" x-bind:aria-expanded="open" aria-haspopup="true"
@@ -61,6 +89,51 @@
                 </div>
             </div>
 
+            {{-- Put this recipe on the meal plan without leaving the page. --}}
+            <div class="relative" x-data="{ open: false }" x-on:click.outside="open = false" x-on:keydown.escape.window="open = false">
+                <button type="button" class="btn" x-on:click="open = !open" x-bind:aria-expanded="open" aria-haspopup="true">
+                    <flux:icon.calendar-days variant="mini" /> Rencanakan
+                </button>
+                <div x-cloak x-show="open" x-transition.opacity
+                    class="fixed inset-x-4 top-20 z-40 rounded-2xl border border-line bg-card p-4 shadow-[0_12px_32px_rgba(16,24,40,.18)] sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-80">
+                    <form wire:submit="planRecipe" class="flex flex-col gap-3">
+                        <p class="text-sm font-semibold">Masukkan ke rencana menu</p>
+                        <div>
+                            <label class="field-label" for="plan-date">Hari</label>
+                            <select id="plan-date" class="field" wire:model="planDate">
+                                @foreach ($planDays as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('planDate') <p class="field-error">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="grid grid-cols-[1fr_88px] gap-2">
+                            <div>
+                                <label class="field-label" for="plan-slot">Waktu makan</label>
+                                <select id="plan-slot" class="field" wire:model="planSlot">
+                                    @foreach ($mealSlots as $slot)
+                                        <option value="{{ $slot->value }}">{{ $slot->label() }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="field-label" for="plan-servings">Porsi</label>
+                                <input id="plan-servings" type="number" min="1" max="50" class="field text-center" wire:model="planServings">
+                            </div>
+                        </div>
+                        @error('planServings') <p class="field-error !mt-0">{{ $message }}</p> @enderror
+                        <button type="submit" class="btn btn-primary w-full" wire:loading.attr="disabled" wire:target="planRecipe">Masukkan ke rencana</button>
+                        @if ($plannedMessage)
+                            <p class="rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg" role="status">
+                                {{ $plannedMessage }}
+                                <a href="{{ route('meal-plan.index', ['minggu' => $planDate]) }}" class="font-semibold underline" wire:navigate>Lihat rencana</a>
+                            </p>
+                        @endif
+                    </form>
+                </div>
+            </div>
+            @endauth
+
             <a href="{{ route('recipes.cook', $recipe) }}" class="btn btn-primary"><flux:icon.play variant="mini" /> Mulai Masak</a>
         </div>
     </div>
@@ -74,13 +147,37 @@
                     <flux:icon.link variant="micro" /> Dari {{ $recipe->sourceLabel() }}
                 </a>
             @endif
-            @if ($recipe->is_public)
-                <span class="status st-ok !h-7">Publik</span>
+            @if ($isOwner && $recipe->isListed())
+                <span class="status st-ok !h-7">Terbit di Jelajahi</span>
             @endif
         </div>
         <h1 class="text-[28px] leading-tight font-semibold tracking-[-0.02em] lg:text-[34px]">{{ $recipe->title }}</h1>
         @if ($recipe->description)
             <p class="max-w-3xl text-[15px] text-ink-2">{{ $recipe->description }}</p>
+        @endif
+        @if (! $isOwner || $forkedFrom)
+            <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                @unless ($isOwner)
+                    <span>oleh
+                        @if ($recipe->user?->username)
+                            <a href="{{ route('profile', $recipe->user) }}" class="font-semibold text-ink hover:text-brand" wire:navigate>{{ $recipe->user->name }}</a>
+                        @else
+                            <b class="font-semibold text-ink">{{ $recipe->user?->name }}</b>
+                        @endif
+                    </span>
+                @endunless
+                @if ($forkedFrom)
+                    <span>Disalin dari
+                        <a href="{{ route('recipes.show', $forkedFrom) }}" class="font-semibold text-ink hover:text-brand" wire:navigate>{{ $forkedFrom->title }}</a>
+                        oleh {{ $forkedFrom->user?->name }}
+                    </span>
+                @endif
+                @if ($canReport)
+                    <flux:modal.trigger name="laporkan">
+                        <button type="button" class="inline-flex min-h-9 items-center gap-1 hover:text-crit-fg"><flux:icon.flag variant="micro" /> Laporkan</button>
+                    </flux:modal.trigger>
+                @endif
+            </p>
         @endif
     </div>
 
@@ -139,7 +236,8 @@
                 </ol>
             </section>
 
-            @if ($recipe->notes)
+            {{-- Personal notes stay private, even when the recipe itself is public. --}}
+            @if ($isOwner && $recipe->notes)
                 <section class="card">
                     <h2 class="card-title">Catatan saya</h2>
                     <p class="mt-3 rounded-xl border border-flag-line bg-flag-bg px-4 py-3.5 leading-relaxed whitespace-pre-line">{{ $recipe->notes }}</p>
@@ -187,7 +285,9 @@
                         </li>
                     @endforeach
                 </ul>
-                @if ($recipe->ingredients->isNotEmpty())
+                @if ($recipe->ingredients->isNotEmpty() && ! auth()->check())
+                    <a href="{{ route('login') }}" class="btn mt-3 w-full"><flux:icon.shopping-bag variant="mini" /> Masuk untuk memasukkan bahan ke daftar belanja</a>
+                @elseif ($recipe->ingredients->isNotEmpty())
                     <div class="mt-3 flex flex-col gap-2">
                         <button type="button" class="btn w-full" x-on:click="$wire.addToShoppingList(porsi, uncheckedIndexes())"
                             x-bind:disabled="checked.length === items.length" wire:loading.attr="disabled" wire:target="addToShoppingList">
@@ -220,6 +320,47 @@
                     <button type="button" class="btn !border-crit-fg !bg-crit-fg !text-white" wire:click="delete">Hapus resep</button>
                 </div>
             </div>
+        </flux:modal>
+    @endif
+
+    @if ($canReport)
+        <flux:modal name="laporkan" class="max-w-md">
+            @if ($reportSent)
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <flux:heading size="lg">Terima kasih, laporan terkirim</flux:heading>
+                        <flux:text class="mt-2">Moderator akan meninjau resep ini. Kalau melanggar, resepnya disembunyikan dari Jelajahi.</flux:text>
+                    </div>
+                    <div class="flex justify-end">
+                        <flux:modal.close><button type="button" class="btn">Tutup</button></flux:modal.close>
+                    </div>
+                </div>
+            @else
+                <form wire:submit="report" class="flex flex-col gap-4">
+                    <div>
+                        <flux:heading size="lg">Laporkan resep ini</flux:heading>
+                        <flux:text class="mt-2">Pilih alasan yang paling cocok. Penulis resep tidak diberi tahu siapa yang melapor.</flux:text>
+                    </div>
+                    <fieldset class="flex flex-col">
+                        <legend class="sr-only">Alasan</legend>
+                        @foreach ($reportReasons as $reason)
+                            <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-1 hover:bg-hover">
+                                <input type="radio" name="reason" value="{{ $reason->value }}" wire:model="reportReason" class="size-5 accent-brand">
+                                {{ $reason->label() }}
+                            </label>
+                        @endforeach
+                    </fieldset>
+                    <div>
+                        <label class="field-label" for="report-note">Keterangan (opsional)</label>
+                        <textarea id="report-note" rows="3" class="field" wire:model="reportNote" maxlength="500" placeholder="mis. disalin dari blog X tanpa izin"></textarea>
+                        @error('reportNote') <p class="field-error">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <flux:modal.close><button type="button" class="btn">Batal</button></flux:modal.close>
+                        <button type="submit" class="btn btn-primary">Kirim laporan</button>
+                    </div>
+                </form>
+            @endif
         </flux:modal>
     @endif
 </div>

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -46,7 +47,35 @@ class User extends Authenticatable // implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            $user->username ??= static::uniqueUsername($user->name);
+        });
+    }
+
+    /**
+     * "Nadia Putri" becomes "nadiaputri", then "nadiaputri2" if taken.
+     */
+    public static function uniqueUsername(string $name): string
+    {
+        $base = Str::limit(Str::slug($name, ''), 30, '') ?: 'koki';
+        $username = $base;
+        $n = 2;
+        while (static::where('username', $username)->exists()) {
+            $username = $base.$n++;
+        }
+
+        return $username;
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'username';
     }
 
     public function recipes(): HasMany
@@ -72,6 +101,14 @@ class User extends Authenticatable // implements MustVerifyEmail
     public function recipeCollections(): HasMany
     {
         return $this->hasMany(RecipeCollection::class);
+    }
+
+    /**
+     * Public recipes by other cooks that this user bookmarked from the catalog.
+     */
+    public function savedRecipes(): BelongsToMany
+    {
+        return $this->belongsToMany(Recipe::class, 'recipe_saves')->withTimestamps();
     }
 
     /**

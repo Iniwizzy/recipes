@@ -13,7 +13,13 @@ Aplikasi web untuk menyimpan resep dan tutorial masak. Dibangun dengan Laravel 1
   - resep paling sering dimasak
   - koleksi per kategori
   - aktivitas terbaru
-- **Resep saya**: cari berdasarkan judul, deskripsi, atau bahan, lalu saring per kategori atau favorit.
+- **Resep saya**: cari berdasarkan judul, deskripsi, atau bahan, lalu saring per kategori atau favorit. Tab **Disimpan** berisi resep orang lain yang kamu simpan dari Jelajahi.
+- **Jelajahi (katalog publik)** di `/jelajahi`, bisa dibuka tanpa login:
+  - resep yang diterbitkan pemiliknya ("Terbitkan di Jelajahi" di form resep)
+  - cari, saring kategori dan durasi, serta **Punya bahan apa?** (mis. `telur, nasi`)
+  - di resep orang lain: **Simpan**, **Salin & ubah** (salinan pribadi dengan kredit penulis), **Rencanakan**, **Koleksi**, dan **Laporkan**
+  - profil penulis di `/u/{username}`; catatan pribadi tidak pernah ikut terlihat
+  - moderator meninjau laporan di `/admin/laporan` dan bisa menyembunyikan resep dari katalog
 - **Detail resep**:
   - porsi bisa diubah dan takaran bahan ikut menyesuaikan (½, ⅓, ¼, …)
   - centang bahan yang sudah siap
@@ -71,6 +77,12 @@ php artisan serve
 ```
 
 Akun demo dari seeder: `demo@bukuresep.test` dengan kata sandi `password`. Akun ini hanya untuk lokal.
+
+Menjadikan akun sebagai moderator katalog (atau mencabutnya dengan `--cabut`):
+
+```bash
+php artisan resep:admin email@contoh.com
+```
 
 Saat mengubah tampilan, jalankan `npm run dev` supaya CSS dan JS terbarui otomatis.
 
