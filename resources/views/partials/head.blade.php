@@ -3,6 +3,7 @@
 <meta name="theme-color" content="#0e7490" />
 
 <title>{{ isset($title) ? $title.' · '.config('app.name') : config('app.name') }}</title>
+@include('partials.favicon')
 
 @isset($description)
     {{-- Public pages: shown by search engines and in link previews (WhatsApp, etc.). --}}
