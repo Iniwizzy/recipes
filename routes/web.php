@@ -2,6 +2,7 @@
 
 use App\Livewire\Dashboard;
 use App\Livewire\Recipes;
+use App\Livewire\ShoppingList;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -17,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('resep/{recipe}/ubah', Recipes\Form::class)->name('recipes.edit');
     Route::get('resep/{recipe}/masak', Recipes\Cook::class)->name('recipes.cook');
     Route::get('resep/{recipe}', Recipes\Show::class)->name('recipes.show');
+
+    Route::get('belanja', ShoppingList::class)->name('shopping.index');
 });
 
 Route::middleware(['auth'])->group(function () {

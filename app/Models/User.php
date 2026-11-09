@@ -59,6 +59,11 @@ class User extends Authenticatable // implements MustVerifyEmail
         return $this->hasMany(CookLog::class);
     }
 
+    public function shoppingListItems(): HasMany
+    {
+        return $this->hasMany(ShoppingListItem::class);
+    }
+
     /**
      * Get the user's initials
      */

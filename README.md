@@ -18,6 +18,11 @@ Aplikasi web untuk menyimpan resep dan tutorial masak. Dibangun dengan Laravel 1
   - centang bahan yang sudah siap
   - catatan pribadi
   - link sumber, dengan video YouTube yang tampil langsung
+  - tombol untuk memasukkan bahan yang belum dicentang ke daftar belanja, sesuai porsi
+- **Daftar belanja**:
+  - bahan yang sama digabung otomatis (2 siung + 3 siung bawang merah jadi 5 siung)
+  - tambah barang dengan mengetik bebas, mis. `2 butir telur` atau `1kg beras`
+  - centang saat belanja, lalu salin daftarnya atau kirim ke WhatsApp
 - **Tulis/ubah resep**:
   - bahan dengan jumlah bebas tulis (`2`, `1,5`, `1/2`, `1 1/2`)
   - langkah yang bisa diurutkan ulang, masing-masing dengan timer opsional
@@ -82,7 +87,7 @@ Tes memakai database MySQL `recipes_test` (lihat `phpunit.xml`).
 
 ## Rencana berikutnya
 
-- Daftar belanja dari bahan yang belum dicentang
 - Rencana menu mingguan
+- Koleksi resep
 - Import resep dari teks atau link (TikTok, YouTube, blog)
 - PWA dan offline untuk Mode Masak

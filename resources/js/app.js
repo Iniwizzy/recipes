@@ -16,6 +16,10 @@ document.addEventListener('alpine:init', () => {
             return `${formatQty((item.q * this.porsi) / this.base)} ${item.unit || ''}`.trim();
         },
 
+        uncheckedIndexes() {
+            return this.items.map((_, index) => index).filter((index) => !this.checked.includes(index));
+        },
+
         readyPercent() {
             return this.items.length ? Math.round((this.checked.length / this.items.length) * 100) : 0;
         },

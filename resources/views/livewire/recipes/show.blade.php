@@ -152,6 +152,21 @@
                         </li>
                     @endforeach
                 </ul>
+                @if ($recipe->ingredients->isNotEmpty())
+                    <div class="mt-3 flex flex-col gap-2">
+                        <button type="button" class="btn w-full" x-on:click="$wire.addToShoppingList(porsi, uncheckedIndexes())"
+                            x-bind:disabled="checked.length === items.length" wire:loading.attr="disabled" wire:target="addToShoppingList">
+                            <flux:icon.shopping-bag variant="mini" />
+                            <span x-text="checked.length === items.length ? 'Semua bahan sudah siap' : 'Masukkan ' + (items.length - checked.length) + ' bahan ke daftar belanja'">Masukkan bahan ke daftar belanja</span>
+                        </button>
+                        @if ($addedMessage)
+                            <p class="flex flex-wrap items-center gap-2 rounded-xl bg-ok-bg px-3 py-2 text-sm font-medium text-ok-fg" role="status">
+                                <flux:icon.check-circle variant="micro" /> {{ $addedMessage }}
+                                <a href="{{ route('shopping.index') }}" class="ml-auto font-semibold underline" wire:navigate>Lihat daftar</a>
+                            </p>
+                        @endif
+                    </div>
+                @endif
             </section>
         </div>
     </div>

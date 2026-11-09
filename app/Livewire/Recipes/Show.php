@@ -4,11 +4,14 @@ namespace App\Livewire\Recipes;
 
 use App\Models\Recipe;
 use App\Support\CoverImage;
+use App\Support\ShoppingList;
 use Livewire\Component;
 
 class Show extends Component
 {
     public Recipe $recipe;
+
+    public ?string $addedMessage = null;
 
     public function mount(Recipe $recipe): void
     {
@@ -20,6 +23,21 @@ class Show extends Component
     {
         $this->authorize('update', $this->recipe);
         $this->recipe->update(['is_favorite' => ! $this->recipe->is_favorite]);
+    }
+
+    /**
+     * Puts the ingredients that are not ticked yet on the shopping list,
+     * scaled to the portion count currently shown on the page.
+     *
+     * @param  array<int, int>  $indexes  positions of the unticked ingredients
+     */
+    public function addToShoppingList(int $servings, array $indexes): void
+    {
+        $this->authorize('view', $this->recipe);
+
+        $rows = ShoppingList::rowsFromRecipe($this->recipe, $servings, $indexes);
+        $count = ShoppingList::add(auth()->user(), $rows, $this->recipe->title);
+        $this->addedMessage = $count ? "{$count} bahan masuk daftar belanja." : null;
     }
 
     public function delete()

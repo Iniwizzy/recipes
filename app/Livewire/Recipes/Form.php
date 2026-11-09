@@ -7,6 +7,7 @@ use App\Enums\Difficulty;
 use App\Models\Recipe;
 use App\Support\CoverImage;
 use App\Support\Quantity;
+use App\Support\Units;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -236,7 +237,7 @@ class Form extends Component
         return view('livewire.recipes.form', [
             'categories' => Category::cases(),
             'difficulties' => Difficulty::cases(),
-            'units' => ['piring', 'butir', 'siung', 'buah', 'batang', 'lembar', 'ikat', 'sdm', 'sdt', 'gram', 'kg', 'ml', 'liter', 'gelas', 'cm', 'potong', 'ekor', 'secukupnya'],
+            'units' => Units::COMMON,
         ])->title($this->recipe ? 'Ubah resep' : 'Tulis resep');
     }
 
