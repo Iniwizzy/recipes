@@ -24,6 +24,10 @@ Aplikasi web untuk menyimpan resep dan tutorial masak. Dibangun dengan Laravel 1
   - bahan yang sama digabung otomatis (2 siung + 3 siung bawang merah jadi 5 siung)
   - tambah barang dengan mengetik bebas, mis. `2 butir telur` atau `1kg beras`
   - centang saat belanja, lalu salin daftarnya atau kirim ke WhatsApp
+- **Koleksi**:
+  - kelompokkan resep sendiri, mis. "Menu anak", "Lebaran", "Bekal"; satu resep boleh di beberapa koleksi
+  - simpan dari halaman resep lewat tombol Koleksi, atau buat koleksi baru langsung di sana
+  - ubah nama, keluarkan resep, atau hapus koleksi tanpa menghapus resepnya
 - **Rencana menu**:
   - satu minggu (Senin–Minggu) × sarapan, makan siang, makan malam, camilan
   - pilih resep lewat pencarian, atur porsi per menu
@@ -92,6 +96,5 @@ Tes memakai database MySQL `recipes_test` (lihat `phpunit.xml`).
 
 ## Rencana berikutnya
 
-- Koleksi resep
 - Import resep dari teks atau link (TikTok, YouTube, blog)
 - PWA dan offline untuk Mode Masak

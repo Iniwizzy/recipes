@@ -69,6 +69,11 @@ class User extends Authenticatable // implements MustVerifyEmail
         return $this->hasMany(MealPlan::class);
     }
 
+    public function recipeCollections(): HasMany
+    {
+        return $this->hasMany(RecipeCollection::class);
+    }
+
     /**
      * Get the user's initials
      */

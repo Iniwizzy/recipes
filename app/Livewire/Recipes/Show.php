@@ -5,6 +5,7 @@ namespace App\Livewire\Recipes;
 use App\Models\Recipe;
 use App\Support\CoverImage;
 use App\Support\ShoppingList;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Show extends Component
@@ -13,10 +14,35 @@ class Show extends Component
 
     public ?string $addedMessage = null;
 
+    public string $newCollection = '';
+
     public function mount(Recipe $recipe): void
     {
         $this->authorize('view', $recipe);
         $this->recipe = $recipe;
+    }
+
+    public function toggleCollection(int $collectionId): void
+    {
+        $this->authorize('view', $this->recipe);
+        auth()->user()->recipeCollections()->findOrFail($collectionId)->recipes()->toggle($this->recipe->id);
+    }
+
+    public function createCollection(): void
+    {
+        $this->authorize('view', $this->recipe);
+        $this->newCollection = trim($this->newCollection);
+        $this->validate(
+            ['newCollection' => ['required', 'string', 'max:60', Rule::unique('collections', 'name')->where('user_id', auth()->id())]],
+            [
+                'newCollection.required' => 'Beri nama koleksinya dulu.',
+                'newCollection.unique' => 'Koleksi dengan nama ini sudah ada. Centang saja di atas.',
+            ]
+        );
+
+        auth()->user()->recipeCollections()->create(['name' => $this->newCollection])
+            ->recipes()->attach($this->recipe->id);
+        $this->reset('newCollection');
     }
 
     public function toggleFavorite(): void
@@ -58,8 +84,12 @@ class Show extends Component
         $this->recipe->load('ingredients', 'steps');
         $recipe = $this->recipe;
 
+        $inCollections = $recipe->collections()->where('collections.user_id', auth()->id())->pluck('collections.id')->all();
+
         return view('livewire.recipes.show', [
             'canEdit' => auth()->user()?->can('update', $recipe) ?? false,
+            'collections' => auth()->user()->recipeCollections()->withCount('recipes')->orderBy('name')->get(),
+            'inCollections' => $inCollections,
             'scaler' => [
                 'base' => $recipe->servings,
                 'items' => $recipe->ingredients->map(fn ($i) => [

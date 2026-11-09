@@ -28,6 +28,9 @@
         <button type="button" class="pick" wire:click="$toggle('favorites')" aria-pressed="{{ $favorites ? 'true' : 'false' }}">
             <flux:icon.heart variant="micro" class="mr-1.5" /> Favorit
         </button>
+        <a href="{{ route('collections.index') }}" class="pick" wire:navigate>
+            <flux:icon.rectangle-stack variant="micro" class="mr-1.5" /> Koleksi
+        </a>
     </div>
 
     @if ($recipes->isEmpty())
@@ -45,25 +48,7 @@
     @else
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4 xl:grid-cols-4">
             @foreach ($recipes as $recipe)
-                <a href="{{ route('recipes.show', $recipe) }}" wire:navigate wire:key="recipe-{{ $recipe->id }}"
-                    class="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-[0_1px_2px_rgba(16,24,40,.05)] transition hover:border-brand dark:shadow-none">
-                    <x-recipe-cover :recipe="$recipe" thumb class="h-[108px] lg:h-36">
-                        @if ($recipe->is_favorite)
-                            <span class="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-card text-brand">
-                                <flux:icon.heart variant="micro" class="fill-current" />
-                                <span class="sr-only">Favorit</span>
-                            </span>
-                        @endif
-                    </x-recipe-cover>
-                    <span class="flex flex-col gap-1.5 p-3 lg:p-4">
-                        <b class="leading-snug font-semibold group-hover:text-brand">{{ $recipe->title }}</b>
-                        <span class="flex items-center gap-1.5 text-xs text-muted">
-                            <flux:icon.clock variant="micro" />
-                            {{ $recipe->totalMinutes() ? $recipe->totalMinutes().' mnt · ' : '' }}{{ $recipe->difficulty->label() }}
-                        </span>
-                        <span class="hidden text-xs text-muted sm:block">{{ $recipe->category->label() }}{{ $recipe->cooked_count ? ', dimasak '.$recipe->cooked_count.'×' : '' }}</span>
-                    </span>
-                </a>
+                <x-recipe-card :recipe="$recipe" wire:key="recipe-{{ $recipe->id }}" />
             @endforeach
         </div>
 

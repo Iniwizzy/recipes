@@ -26,6 +26,41 @@
                     <button type="button" class="ibtn" aria-label="Hapus resep"><flux:icon.trash variant="mini" /></button>
                 </flux:modal.trigger>
             @endif
+
+            {{-- Save to collections: a panel under the button on desktop, a sheet near the top on phones. --}}
+            <div class="relative" x-data="{ open: false }" x-on:click.outside="open = false" x-on:keydown.escape.window="open = false">
+                <button type="button" class="btn" x-on:click="open = !open" x-bind:aria-expanded="open" aria-haspopup="true"
+                    @class(['!border-transparent !bg-brand-tint !text-brand' => $inCollections])>
+                    <flux:icon.rectangle-stack variant="mini" /> Koleksi
+                    @if ($inCollections)
+                        <span class="text-xs font-bold tabular-nums">{{ count($inCollections) }}</span>
+                    @endif
+                </button>
+                <div x-cloak x-show="open" x-transition.opacity
+                    class="fixed inset-x-4 top-20 z-40 rounded-2xl border border-line bg-card p-3 shadow-[0_12px_32px_rgba(16,24,40,.18)] sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-80">
+                    <p class="px-1 text-sm font-semibold">Simpan ke koleksi</p>
+                    <ul class="mt-1.5 max-h-64 overflow-y-auto">
+                        @forelse ($collections as $collection)
+                            <li wire:key="col-{{ $collection->id }}">
+                                <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-1 hover:bg-hover">
+                                    <input type="checkbox" class="size-5 shrink-0 accent-brand" @checked(in_array($collection->id, $inCollections, true)) wire:click="toggleCollection({{ $collection->id }})">
+                                    <span class="min-w-0 flex-1 truncate">{{ $collection->name }}</span>
+                                    <span class="text-xs text-muted tabular-nums">{{ $collection->recipes_count }}</span>
+                                </label>
+                            </li>
+                        @empty
+                            <li class="px-1 py-2 text-sm text-muted">Belum ada koleksi. Buat yang pertama di bawah.</li>
+                        @endforelse
+                    </ul>
+                    <form wire:submit="createCollection" class="mt-2 flex gap-2 border-t border-line-soft pt-3">
+                        <input type="text" class="field !h-10" wire:model="newCollection" placeholder="Koleksi baru, mis. Menu anak" maxlength="60" aria-label="Nama koleksi baru">
+                        <button type="submit" class="btn btn-primary btn-sm shrink-0" aria-label="Buat koleksi dan simpan resep ini"><flux:icon.plus variant="micro" /></button>
+                    </form>
+                    @error('newCollection') <p class="field-error px-1">{{ $message }}</p> @enderror
+                    <a href="{{ route('collections.index') }}" class="mt-2 block px-1 text-xs font-semibold text-brand hover:underline" wire:navigate>Kelola koleksi</a>
+                </div>
+            </div>
+
             <a href="{{ route('recipes.cook', $recipe) }}" class="btn btn-primary"><flux:icon.play variant="mini" /> Mulai Masak</a>
         </div>
     </div>

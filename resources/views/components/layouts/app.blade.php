@@ -3,6 +3,7 @@
     $recipeCount = $user->recipes()->count();
     $favoriteCount = $user->recipes()->where('is_favorite', true)->count();
     $shoppingCount = $user->shoppingListItems()->whereNull('checked_at')->count();
+    $collectionCount = $user->recipeCollections()->count();
     $onFavorites = request()->routeIs('recipes.index') && request()->boolean('favorit');
 @endphp
 <!DOCTYPE html>
@@ -75,6 +76,7 @@
                     <x-nav-item :href="route('dashboard')" icon="squares-2x2" :current="request()->routeIs('dashboard')">Beranda</x-nav-item>
                     <x-nav-item :href="route('recipes.index')" icon="book-open" :current="request()->routeIs('recipes.index', 'recipes.show', 'recipes.edit') && ! $onFavorites" :count="$recipeCount">Resep saya</x-nav-item>
                     <x-nav-item :href="route('recipes.index', ['favorit' => 1])" icon="heart" :current="$onFavorites" :count="$favoriteCount ?: null">Favorit</x-nav-item>
+                    <x-nav-item :href="route('collections.index')" icon="rectangle-stack" :current="request()->routeIs('collections.*')" :count="$collectionCount ?: null">Koleksi</x-nav-item>
                     <x-nav-item :href="route('meal-plan.index')" icon="calendar-days" :current="request()->routeIs('meal-plan.*')">Rencana menu</x-nav-item>
                     <x-nav-item :href="route('shopping.index')" icon="shopping-bag" :current="request()->routeIs('shopping.*')" :count="$shoppingCount ?: null">Daftar belanja</x-nav-item>
 
